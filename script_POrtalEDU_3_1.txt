@@ -241,7 +241,14 @@ EMpezamos agregar las interfaces de las entidades (Tablas)
 
 Crear el modelo Categoria en el proyecto Models con la entidades o atributos de la tabla 
 
- public class Categoria
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Text;
+
+namespace PortalEDU.Models
+{
+    public class Categoria
     {
         [Key]
         public int Id { get; set; }
@@ -256,12 +263,24 @@ Crear el modelo Categoria en el proyecto Models con la entidades o atributos de 
         public string Orden { get; set; }
 
     }
+}
+
 
 Creamos una interfaz dentro de repositry 
 ICategoriaRepository le damos atributo PUBLICA heredamos de IRepository y le pasamos la clase Categoria
 
 Luego Listamos sus metodos
- public interface ICategoriaRepository : IRepository<Categoria>
+
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using PortalEDU.Models;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace PortalEDU.ADO.Data.Repository
+{
+    public interface ICategoriaRepository : IRepository<Categoria>
     {
 
         IEnumerable<SelectListItem> GetListaCategoria();
@@ -323,7 +342,107 @@ namespace PortalEDU.ADO.Data
     }
 }
 
+
+
+ES EL MOMENTO DE CREAR EL CONTENEDOR DE TRABAJO aqui se crearan todos los repositorios de trabajo EJEMPLO:
+ICategoriaRepository Categoria { get; } // Y asi crear para todos los repositorios de las entidades creadas
+Asi que esta ira creciendo a medida que crece nuestro proyecto 
+
+En IRepository Crear la interfaz IContenedorTrabajo
+
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace PortalEDU.ADO.Data.Repository
+{
+    interface IContenedorTrabajo : IDisposable
+    {
+        ICategoriaRepository Categoria { get; }
+
+        void Save();
+    }
+}
+
+
+
+
+
+LUEGO EN DATA CREAMOS UNA CLASE DEL TIPO ContenedorTrabnajo
+
+Aqui se van a crear el acceso a la interfaz y debe de ir creciendo junto a las nuevas entidades, aqui solo se creo categoria:
+
+using PortalEDU.ADO.Data.Repository;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+
+namespace PortalEDU.ADO.Data
+{
+    public class ContenedorTrabajo : IContenedorTrabajo
+    {
+
+        private readonly ApplicationDbContext _db;
+
+        public ContenedorTrabajo(ApplicationDbContext db)
+        {
+            _db = db;
+            Categoria = new CategoriaRepository(_db);
+        }
+
+
+
+        public ICategoriaRepository Categoria { get; private set; }
+
+        public void Dispose()
+        {
+            _db.Dispose();
+        
+        }
+
+        public void Save()
+        {
+
+            _db.SaveChanges();
+        }
+    }
+}
+
+
+----------AQUI TERMINA MODELADO DE LA ESTRUCTURA IREPOSITORYPATERN, SOLO SE DEBE DE IR MODIFICANDO A MEDIDA QUE 
+VAMOS CREANDO NUEVAS ENTIDADES--------
+
+PERMANECEN 
+IRepository
+Repository 
+Y en las unidades de trabajo IContenedorTrabajo y ContenedorTrabajo Añadir las nuevas entidades
+
+
+Las nuevos elementos que se deben crear son:
+Clase NuenoElemento  --> Este va en el proyecto models y son los atributos de la BD
+INuevoElementoRepository ---> Dentro de la carpeta repository
+NuevoElementoRepository ---> Esta va dentro de Data 
+
+---------------------------------------------FINISH del Patron Repositorio-----------------------------------
+
+
+
+
+Debemos de hacer la conexion con la BD
+OJO deben de estar en el AplicationDbContext el DbSet de la nueva taba a crear 
+
+Desde la consola de paquetes: ---> verificar que esta en el proyecto Acceso a Datos ADO
+
+add migration CreacionTablaInicialCategoria ---> No se pudo asi...
  
+En mi caso no se pudo realizar la migracion segun el video
+se realizo con Add-Migration ----> Revisar Link https://anexsoft.com/implementando-migraciones-con-entity-framework-y-asp-net-mvc
+
+
+
+
 
 
 

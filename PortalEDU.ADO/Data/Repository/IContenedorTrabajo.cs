@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PortalEDU.ADO.Data.Repository
 {
-    interface IContenedorTrabajo : IDisposable
+    public interface IContenedorTrabajo : IDisposable
     {
         ICategoriaRepository Categoria { get; }
 
