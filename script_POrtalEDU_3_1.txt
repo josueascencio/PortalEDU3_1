@@ -79,7 +79,259 @@ Instalacion de plugin para frontend
 
 Inicia Repository
 
-En el proyecto ADO carpeta data - repository agregar una interface IRepository donde irean los metodos globales
+En el proyecto ADO carpeta data - repository agregar una interface (PUBLIC) IRepository donde irean los metodos globales
+public interface IRepository<T> where T : class 
+
+Importar system.linq.expression 
+
+CLASE GLOBAL IREPOSITORY
+
+{
+        T Get(int id);
+
+        IEnumerable<T> GetAll(
+
+            Expression<Func<T, bool>> Filter = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+            string includeProperties = null
+            );
+
+        T GetFirstOrDefault(
+             Expression<Func<T, bool>> Filter = null,
+              string includeProperties = null
+
+            );
+
+        void Add(T entity);
+
+        void Remove(int id);
+
+        void Remove(T entity);
+
+
+    }
+}
+
+
+
+DENTRO de data crear una clase PUBLICA llamada Repository que debe de heredar de IRerpository 
+- IMplementar los metodos de la interfaz 
+
+- Agregar variable de solo lectura y modelar la Clase Repository
+
+
+using Microsoft.EntityFrameworkCore;
+using PortalEDU.ADO.Data.Repository;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+
+
+namespace PortalEDU.ADO.Data
+{
+  
+
+    public class Repository<T> : IRepository<T> where T : class
+    {
+
+
+        protected readonly DbContext Context;
+        internal DbSet<T> dbSet;
+
+        public Repository(DbContext context)
+        {
+            Context = context;
+            this.dbSet = context.Set<T>();
+        }
+
+
+
+
+        public void Add(T entity)
+        {
+            dbSet.Add(entity);
+        }
+
+        public T Get(int id)
+        {
+
+            return dbSet.Find(id);
+        }
+
+        public IEnumerable<T> GetAll(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, string includeProperties = null)
+        {
+
+            IQueryable<T> query = dbSet;
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            // include property separadas por coma
+
+            if (includeProperties != null)
+            {
+                foreach (var includeProperty in includeProperties.Split
+                (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty);
+                }
+
+            }
+
+            if (orderBy != null)
+            {
+                return orderBy(query).ToList();
+            }
+
+
+            return query.ToList();
+        }
+
+        public T GetFirstOrDefault(Expression<Func<T, bool>> filter = null, string includeProperties = null)
+        {
+            IQueryable<T> query = dbSet;
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+
+            // include property separadas por coma
+
+            if (includeProperties != null)
+            {
+                foreach (var includeProperty in includeProperties.Split
+                (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty);
+                }
+
+            }
+
+            return query.FirstOrDefault();
+
+
+        }
+
+        public void Remove(int id)
+        {
+            T entityToRemove = dbSet.Find(id);
+            Remove(entityToRemove);
+        }
+
+        public void Remove(T entity)
+        {
+            dbSet.Remove(entity);
+        }
+    }
+}
+
+
+
+
+
+EMpezamos agregar las interfaces de las entidades (Tablas)
+
+
+
+Crear el modelo Categoria en el proyecto Models con la entidades o atributos de la tabla 
+
+ public class Categoria
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required(ErrorMessage ="Ingrese un nombre para la categoria")]
+        [Display (Name ="Nombre Categoria")]
+        public  string Nombre { get; set; }
+
+
+        [Required]
+        [Display(Name = "Orden de Vizualizacion")]
+        public string Orden { get; set; }
+
+    }
+
+Creamos una interfaz dentro de repositry 
+ICategoriaRepository le damos atributo PUBLICA heredamos de IRepository y le pasamos la clase Categoria
+
+Luego Listamos sus metodos
+ public interface ICategoriaRepository : IRepository<Categoria>
+    {
+
+        IEnumerable<SelectListItem> GetListaCategoria();
+
+        void Update(Categoria categoria);
+    }
+}
+
+
+
+
+OJO: en la clase Application DBContext debemos de mapear todas las entidades, Ejemplo:
+
+
+public DbSet<Categoria> Categoria { set; get; } // Asi todas las tablas de la base de datos.
+
+
+
+Creamos una clase en carpeta Data de ADO con el nombre de CategoriaRepository para Instanciar la Interfaz
+
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using PortalEDU.ADO.Data.Repository;
+using PortalEDU.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace PortalEDU.ADO.Data
+{
+    public class CategoriaRepository : Repository<Categoria>, ICategoriaRepository
+    {
+        private readonly ApplicationDbContext _db;
+
+        public CategoriaRepository(ApplicationDbContext db):base (db)
+        {
+            _db = db;
+        }
+
+
+        public IEnumerable<SelectListItem> GetListaCategoria()
+        {
+            return _db.Categoria.Select(i => new SelectListItem()
+            {
+                Text= i.Nombre,
+                Value= i.Id.ToString()
+            });
+        }
+
+        public void Update(Categoria categoria)
+        {
+
+            var ObjDesdeDb = _db.Categoria.FirstOrDefault(s => s.Id == categoria.Id);
+            ObjDesdeDb.Nombre = categoria.Nombre;
+            ObjDesdeDb.Orden = categoria.Orden;
+            _db.SaveChanges();
+        }
+    }
+}
+
+ 
+
+
+
+
+
+
+
+
   
 
 
