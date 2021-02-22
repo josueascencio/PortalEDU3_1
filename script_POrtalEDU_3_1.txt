@@ -442,6 +442,95 @@ se realizo con Add-Migration ----> Revisar Link https://anexsoft.com/implementan
 
 
 
+Setear Cadena de conexion 
+
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(local);Database=PortalEDU_3_1;user id=sa; pwd=Ef1c13nc1@; Trusted_Connection=false; MultipleActiveResultSets=true"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "AllowedHosts": "*"
+}
+
+Luego enviamos la migracion a la BD con el comando update-database
+
+------------------------------------------------TERMINA LA PRUEBA DE MIGRACION--------------------------------
+
+
+INICIA CRUD CATEGORIAS
+
+EN AREAS --> En el controllers de Admin crear un controlador CategoriasController
+
+////Primer controlador
+
+using Microsoft.AspNetCore.Mvc;
+using PortalEDU.ADO.Data;
+using PortalEDU.ADO.Data.Repository;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace PortalEdu3_1.Areas.Admin.Controllers
+{
+
+    [Area("Admin")]
+    public class CategoriasController : Controller
+    {
+        private readonly IContenedorTrabajo _contenedorTrabajo;
+
+        public CategoriasController(IContenedorTrabajo contenedorTrabajo)
+        {
+            _contenedorTrabajo = contenedorTrabajo;
+        }
+
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+	// En esta region se manda a llamar los metodos de acceso a datos para traer la informacion que esta en nuestyro repositorio general
+	// llamado IRepository
+
+        #region LLAMADAS A LAS API
+        [HttpGet]
+
+        public IActionResult GetAll()
+        {
+            return Json(new {data = _contenedorTrabajo.Categoria.GetAll()});
+        }
+
+        #endregion
+
+
+
+    }
+}
+
+
+
+-----------------------CREANDO LA VISTA---------------------------------------------------
+
+- Clic derecho sobre el Index del controlador Agragr vista y elegir pagina de diseño _Layout
+
+-Luego de crar la vista asegurarse de instanciar la los contenedores de trabajo en el starup
+Ejemplo:services.AddScoped<IContenedorTrabajo, ContenedorTrabajo>(); 
+
+-Para la creacion de la tabla que tendra los datos se utilizo boopstrap y tambien javascrip se creo categoria.js
+en la carpeta JS de wwwroot que tendra el script de la vista
+
+
+
+
+
+ 
 
 
 

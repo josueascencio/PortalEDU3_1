@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using PortalEDU.ADO.Data.Repository;
 
 namespace PortalEdu3_1
 {
@@ -35,6 +36,7 @@ namespace PortalEdu3_1
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
             services.AddRazorPages();
+            services.AddScoped<IContenedorTrabajo, ContenedorTrabajo>();
             
         }
 

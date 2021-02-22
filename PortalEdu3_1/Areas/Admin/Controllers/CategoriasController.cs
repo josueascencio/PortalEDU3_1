@@ -25,6 +25,12 @@ namespace PortalEdu3_1.Areas.Admin.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult Create() {
+            return View();
+        }
+           
+
 
         #region LLAMADAS A LAS API
         [HttpGet]
