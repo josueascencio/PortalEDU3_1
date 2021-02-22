@@ -1,0 +1,218 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Index CATEGORIAS</h1>
+
+<div class="container">
+    <div class="row">
+        <div class="col-6">
+            <h2 class="text-primary">Lista de Categoriasd</h2>
+        </div>
+        <div class="col-6 text-right">
+            <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus"> </i> Crear Nueva Categoria</a>
+        </div>
+    </div>
+
+    <br />
+    <br />
+    <table id="tblCategorias" class="table table-striped table table-bordered" style=" width:100%"  >
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+            </tr>
+       </thead>    
+    
+    </table>
+</div>
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="btn-group" role="group">
+
+                <button class="btn btn-secondary" type="button">
+                    Left
+                </button>
+                <button class="btn btn-secondary" type="button">
+                    Center
+                </button>
+                <button class="btn btn-secondary" type="button">
+                    Right
+                </button>
+                <button class="btn btn-secondary" type="button">
+                    Justify
+                </button>
+            </div>
+            <table class="table table-hover table-sm">
+                <thead>
+                    <tr>
+                        <th>
+                            #
+                        </th>
+                        <th>
+                            Product
+                        </th>
+                        <th>
+                            Payment Taken
+                        </th>
+                        <th>
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            1
+                        </td>
+                        <td>
+                            TB - Monthly
+                        </td>
+                        <td>
+                            01/04/2012
+                        </td>
+                        <td>
+                            Default
+                        </td>
+                    </tr>
+                    <tr class="table-active">
+                        <td>
+                            1
+                        </td>
+                        <td>
+                            TB - Monthly
+                        </td>
+                        <td>
+                            01/04/2012
+                        </td>
+                        <td>
+                            Approved
+                        </td>
+                    </tr>
+                    <tr class="table-success">
+                        <td>
+                            2
+                        </td>
+                        <td>
+                            TB - Monthly
+                        </td>
+                        <td>
+                            02/04/2012
+                        </td>
+                        <td>
+                            Declined
+                        </td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td>
+                            3
+                        </td>
+                        <td>
+                            TB - Monthly
+                        </td>
+                        <td>
+                            03/04/2012
+                        </td>
+                        <td>
+                            Pending
+                        </td>
+                    </tr>
+                    <tr class="table-danger">
+                        <td>
+                            4
+                        </td>
+                        <td>
+                            TB - Monthly
+                        </td>
+                        <td>
+                            04/04/2012
+                        </td>
+                        <td>
+                            Call in to confirm
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div id="card-904995">
+                <div class="card">
+                    <div class="card-header">
+                        <a class="card-link collapsed" data-toggle="collapse" data-parent="#card-904995" href="#card-element-96549">Collapsible Group Item #1</a>
+                    </div>
+                    <div id="card-element-96549" class="collapse">
+                        <div class="card-body">
+                            Anim pariatur cliche...
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <a class="card-link collapsed" data-toggle="collapse" data-parent="#card-904995" href="#card-element-207446">Collapsible Group Item #2</a>
+                    </div>
+                    <div id="card-element-207446" class="collapse">
+                        <div class="card-body">
+                            Anim pariatur cliche...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel slide" id="carousel-29409">
+                <ol class="carousel-indicators">
+                    <li data-slide-to="0" data-target="#carousel-29409">
+                    </li>
+                    <li data-slide-to="1" data-target="#carousel-29409" class="active">
+                    </li>
+                    <li data-slide-to="2" data-target="#carousel-29409">
+                    </li>
+                </ol>
+                <div class="carousel-inner">
+                    <div class="carousel-item">
+                        <img class="d-block w-100" alt="Carousel Bootstrap First" src="https://www.layoutit.com/img/sports-q-c-1600-500-1.jpg" />
+                        <div class="carousel-caption">
+                            <h4>
+                                First Thumbnail label
+                            </h4>
+                            <p>
+                                Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="carousel-item active">
+                        <img class="d-block w-100" alt="Carousel Bootstrap Second" src="https://www.layoutit.com/img/sports-q-c-1600-500-2.jpg" />
+                        <div class="carousel-caption">
+                            <h4>
+                                Second Thumbnail label
+                            </h4>
+                            <p>
+                                Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img class="d-block w-100" alt="Carousel Bootstrap Third" src="https://www.layoutit.com/img/sports-q-c-1600-500-3.jpg" />
+                        <div class="carousel-caption">
+                            <h4>
+                                Third Thumbnail label
+                            </h4>
+                            <p>
+                                Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.
+                            </p>
+                        </div>
+                    </div>
+                </div> <a class="carousel-control-prev" href="#carousel-29409" data-slide="prev"><span class="carousel-control-prev-icon"></span> <span class="sr-only">Previous</span></a> <a class="carousel-control-next" href="#carousel-29409" data-slide="next"><span class="carousel-control-next-icon"></span> <span class="sr-only">Next</span></a>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts{ 
+    <script src="~/js/categoria.js">
+
+
+    </script>
+
+}
