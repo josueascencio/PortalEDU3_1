@@ -8,6 +8,8 @@ namespace PortalEDU.ADO.Data.Repository
     {
         ICategoriaRepository Categoria { get; }
 
+        IArticuloRepository Articulo { get; }
+
         void Save();
     }
 }

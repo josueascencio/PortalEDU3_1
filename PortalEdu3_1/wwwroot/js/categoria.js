@@ -15,7 +15,7 @@ function cargarDatatable() {
         "columns": [
             { "data": "id", "width": "5%" },
             { "data": "nombre", "width": "50%" },
-            { "data": "orden", "width": "20%" },
+            { "data": "orden", "width": "10%" },
             {
                 "data": "id",
                 "render": function (data) {
@@ -41,12 +41,12 @@ function cargarDatatable() {
 
 function Delete(url) {
     swal({
-        title: "Esta seguro de borrar?",
-        text: "Este contenido no se puede recuperar!",
+        title: "¿Esta seguro de borrar?",
+        text: "¡Este contenido no se puede recuperar!",
         type: "warning",
         showCancelButton: true,
         confirmButtonColor: "#DD6B55",
-        confirmButtonText: "Si, borrar!",
+        confirmButtonText: "Si, ¡borrar!",
         closeOnconfirm: true
     }, function () {
         $.ajax({

@@ -526,15 +526,283 @@ Ejemplo:services.AddScoped<IContenedorTrabajo, ContenedorTrabajo>();
 -Para la creacion de la tabla que tendra los datos se utilizo boopstrap y tambien javascrip se creo categoria.js
 en la carpeta JS de wwwroot que tendra el script de la vista
 
+---------------------------------------Script de la tabla---------------------------------------------------
+var dataTable;
+
+$(document).ready(function () {
+    cargarDatatable();
+});
+
+
+function cargarDatatable() {
+    dataTable = $("#tblCategorias").DataTable({
+        "ajax": {
+            "url": "/admin/categorias/GetAll",
+            "type": "GET",
+            "datatype": "json"
+        },
+        "columns": [
+            { "data": "id", "width": "5%" },
+            { "data": "nombre", "width": "50%" },
+            { "data": "orden", "width": "20%" },
+            {
+                "data": "id",
+                "render": function (data) {
+                    return `<div class="text-center">
+                            <a href='/Admin/Categorias/Edit/${data}' class='btn btn-success text-white' style='cursor:pointer; width:100px;'>
+                            <i class='fas fa-edit'></i> Editar
+                            </a>
+                            &nbsp;
+                            <a onclick=Delete("/Admin/Categorias/Delete/${data}") class='btn btn-danger text-white' style='cursor:pointer; width:100px;'>
+                            <i class='fas fa-trash-alt'></i> Borrar
+                            </a>
+                            `;
+                }, "width": "30%"
+            }
+        ],
+        "language": {
+            "emptyTable": "No hay registros"
+        },
+        "width": "100%"
+    });
+}
+
+
+function Delete(url) {
+    swal({
+        title: "Esta seguro de borrar?",
+        text: "Este contenido no se puede recuperar!",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "Si, borrar!",
+        closeOnconfirm: true
+    }, function () {
+        $.ajax({
+            type: 'DELETE',
+            url: url,
+            success: function (data) {
+                if (data.success) {
+                    toastr.success(data.message);
+                    dataTable.ajax.reload();
+                }
+                else {
+                    toastr.error(data.message);
+                }
+            }
+        });
+    });
+}
+
+------------------------------------Aqui termina Script de la tabla--------------------------------------------
+
+
+AHora se crea el formulario para crear categorias
+
+- creamos el metodo get de create 
+ [HttpGet]
+        public IActionResult Create() {
+            return View();
+        }
+
+- Luegro agregamos la vista del metodo, click derecho sobre create y creamos la vista 
+
+- invocamos el modelo que vamos a utilizar @model PortalEDU.Models.Categoria
+
+- Creamos el formulario con tagHelpers y se escribe el codigo para llamar una vista parcial para volver luego
+ se crea la vista parcial en Shared
+
+ASI QUEDA CREATE:
+@model PortalEDU.Models.Categoria
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Create</h1>
+
+<br />
+<br />
+<h3 class="text-center">Crear una nueva categoria    </h3>
+<form asp-action="Create" method="post">
+    <div class="row px-2 mx-2 border">
+        <div asp-validation-summary=" ModelOnly" class="text-danger"></div>
+        <div class="col-10 offset-1 mt-4">
+            <div class="form-group row">
+                <div class="col-4">
+                    <label asp-for="Nombre"> </label>
+                </div>
+                <div class="col-8">
+                    <input asp-for="Nombre" class="form-control" />
+                    <span asp-validation-for="Nombre" class="text-danger"> </span>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-4">
+                    <label asp-for="Orden"> </label>
+                </div>
+                <div class="col-8">
+                    <input asp-for="Orden" class="form-control" />
+                    <span asp-validation-for="Orden" class="text-danger"> </span>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-8 offset-4">
+                    <partial name="_VistaCrearVolver"/>
+                </div>
+                
+
+            </div>
+
+        </div>
+    </div>
+</form>
+
+
+Y la vista Parcial:
+
+<div class="row">
+    <div class="col">
+        <button type="submit" class="btn btn-primary form-control"> Crear</button>       
+        &nbsp;
+    </div>
+    <div class="col">
+        <a asp-action="Index" class="btn btn-success form-control">Volver a la vista</a>
+    </div>
+</div>
 
 
 
+
+Ahora a crear el metodo post crear de categoria para guardar cambios, queda de la siguiente manera:
+     [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Create(Categoria categoria)
+        {
+            if (ModelState.IsValid)
+            {
+                _contenedorTrabajo.Categoria.Add(categoria);
+                _contenedorTrabajo.Save();
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(categoria);
+        }
+
+
+
+Continuadmos con el medoto Edit 
+[HttpGet]
+        public IActionResult Edit(int id)
+        {
+            Categoria categoria = new Categoria();
+            categoria = _contenedorTrabajo.Categoria.Get(id);
+            if (categoria == null)
+            {
+                return NotFound();
+
+            }
+            return View(categoria);
+        }
 
  
+EDIT CSHTML
+@model PortalEDU.Models.Categoria
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Edit</h1>
+
+<h1>Create</h1>
+
+<br />
+<br />
+<h3 class="text-center">Editar categoria</h3>
+<form asp-action="Create" method="post">
+    <div class="row px-2 mx-2 border">
+        <div asp-validation-summary=" ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="Id" />
+        <div class="col-10 offset-1 mt-4">
+            <div class="form-group row">
+                <div class="col-4">
+                    <label asp-for="Nombre"> </label>
+                </div>
+                <div class="col-8">
+                    <input asp-for="Nombre" class="form-control" placeholder="Categoria" />
+                    <span asp-validation-for="Nombre" class="text-danger"> </span>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-4">
+                    <label asp-for="Orden"> </label>
+                </div>
+                <div class="col-8">
+                    <input asp-for="Orden" class="form-control" />
+                    <span asp-validation-for="Orden" class="text-danger"> </span>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-8 offset-4">
+                    <div class="row">
+                        <div class="col">
+                            <button type="submit" class="btn btn-primary form-control" (////OJO AQUI PARA REGRESAR ID) asp-route-id="@Model.Id">Actualizar</button>
+                        </div>
+                        <div class="col">
+                            <a asp-action="Index" class="btn btn-success form-control">Volver a la vista</a>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+    </div>
+</form>
 
 
 
+Y EN EL CONTROLER EDIT METODO POST -- Utilizamos el mismo de create y hacemos los cambios pertinentes
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(Categoria categoria)
+        {
+            if (ModelState.IsValid)
+            {
+                _contenedorTrabajo.Categoria.Update(categoria);
+                _contenedorTrabajo.Save();
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(categoria);
+        }
+
+
+Continuamos con DELETE
+
+Dentro de region: #region LLAMADAS A LAS API
+
+  public IActionResult Delete(int id)
+        {
+
+            var ObjFromDb = _contenedorTrabajo.Categoria.Get(id);
+            if (ObjFromDb == null)
+            {
+                return Json(new { success = false, message = "Error al intentar borrar categoria" });
+
+            }
+
+            _contenedorTrabajo.Categoria.Remove(ObjFromDb);
+            _contenedorTrabajo.Save();
+            return Json(new { success = false, message = "Categoria borrada con exito" });
+        }
 
 
 

@@ -15,9 +15,9 @@ namespace PortalEDU.Models
         public  string Nombre { get; set; }
 
 
-        [Required]
-        [Display(Name = "Orden de Vizualizacion")]
-        public string Orden { get; set; }
+        [Required(ErrorMessage ="Ingrese un numero valido")]
+        [Display(Name ="Orden de Vizualizacion")]
+        public int Orden { get; set; }
 
     }
 }
