@@ -1,0 +1,1037 @@
+PortalEDU3_1
+
+Crear nuevo proyecto Biblioteca Core
+- MOdels
+- ACCeso a Datos
+- Utilidades 
+
+INstalar Ngets
+- MVC.RAzor.RuntimeCompilation (para guardar cambios y compilarlos en tiempo real)
+- ASPnetcore.MVC para proyectos ADO y MOdels
+- ASPnetcore.MVC.NewtonSoftjson para el proyecto principal
+- Microsoft.Entityframworkcore para ADO
+- Microsoft.Extensions.Identity.Stores para ADO y models
+- Microsoft.Aspnetcore.Identity.EntityframeworkCore para ADO
+- Microsoft.EntityframworkCore.sqlserver para ADO
+
+
+Modificaion de clases
+
+- En starup --> services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
+
+Crear Areas para permisos
+
+- Cambiar en el startup el endpoint "{area=Anonimo}/{controller=Home}/{action=Index}/{id?}");
+- Eliminar sus modelos y data porque usaremos los creados en biblioteca aspnetcore Models y ADO
+- Mover "la clase" controllers global dentro de usuario anonimo
+- Copiar ViewImport y viewstart dentro de los views de las areas. cambiar la ruta @{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+- Setear home controller con [area(Anonimo)]
+- LLevarse clase errorviewmodels del proyewcto general al proyecto models creado con la biblioteca luego borrar models general
+- Eliminamos las class1.cs creadas con las bibliotecas
+- Arrastrar carpeta data a ADO luego elimarla
+- Cambiar el namespace de applications dbcontext para usar el ADO
+- Eliminar las migraciones existentes
+- Mover carpeta Migrations a ADO
+- Arrastrar carpeta hode del view general para la carpeta view del usuario anonimo 
+
+
+Crear carpetas dentro de DATA
+- Inicalizador
+- Repository
+
+
+Luego debemos de crar referencias en el pryecto general del proyecto ADO
+Video 29
+
+- dependencias del proyecto principasWEB agregarle Acceso a datos ADO
+- Dendro de las dependencias acceso a datos de ADO agregar modelos y utilidades
+
+
+
+Configurtacion del frontEnd
+
+Video 30
+bajar css de https://bootswatch.com/
+Modificar navbar
+
+video 31
+Instalacion de plugin para frontend
+<!--Css todos-->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css" />
+
+
+<!--Js plugins-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.serializeJSON/2.9.0/jquery.serializejson.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
+
+<script src="https://kit.fontawesome.com/7588f654f8.js" crossorigin="anonymous"></script>
+
+
+Inicia Repository
+
+En el proyecto ADO carpeta data - repository agregar una interface (PUBLIC) IRepository donde irean los metodos globales
+public interface IRepository<T> where T : class 
+
+Importar system.linq.expression 
+
+CLASE GLOBAL IREPOSITORY
+
+{
+        T Get(int id);
+
+        IEnumerable<T> GetAll(
+
+            Expression<Func<T, bool>> Filter = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+            string includeProperties = null
+            );
+
+        T GetFirstOrDefault(
+             Expression<Func<T, bool>> Filter = null,
+              string includeProperties = null
+
+            );
+
+        void Add(T entity);
+
+        void Remove(int id);
+
+        void Remove(T entity);
+
+
+    }
+}
+
+
+
+DENTRO de data crear una clase PUBLICA llamada Repository que debe de heredar de IRerpository 
+- IMplementar los metodos de la interfaz 
+
+- Agregar variable de solo lectura y modelar la Clase Repository
+
+
+using Microsoft.EntityFrameworkCore;
+using PortalEDU.ADO.Data.Repository;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+
+
+namespace PortalEDU.ADO.Data
+{
+  
+
+    public class Repository<T> : IRepository<T> where T : class
+    {
+
+
+        protected readonly DbContext Context;
+        internal DbSet<T> dbSet;
+
+        public Repository(DbContext context)
+        {
+            Context = context;
+            this.dbSet = context.Set<T>();
+        }
+
+
+
+
+        public void Add(T entity)
+        {
+            dbSet.Add(entity);
+        }
+
+        public T Get(int id)
+        {
+
+            return dbSet.Find(id);
+        }
+
+        public IEnumerable<T> GetAll(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, string includeProperties = null)
+        {
+
+            IQueryable<T> query = dbSet;
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            // include property separadas por coma
+
+            if (includeProperties != null)
+            {
+                foreach (var includeProperty in includeProperties.Split
+                (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty);
+                }
+
+            }
+
+            if (orderBy != null)
+            {
+                return orderBy(query).ToList();
+            }
+
+
+            return query.ToList();
+        }
+
+        public T GetFirstOrDefault(Expression<Func<T, bool>> filter = null, string includeProperties = null)
+        {
+            IQueryable<T> query = dbSet;
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+
+            // include property separadas por coma
+
+            if (includeProperties != null)
+            {
+                foreach (var includeProperty in includeProperties.Split
+                (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty);
+                }
+
+            }
+
+            return query.FirstOrDefault();
+
+
+        }
+
+        public void Remove(int id)
+        {
+            T entityToRemove = dbSet.Find(id);
+            Remove(entityToRemove);
+        }
+
+        public void Remove(T entity)
+        {
+            dbSet.Remove(entity);
+        }
+    }
+}
+
+
+
+
+
+EMpezamos agregar las interfaces de las entidades (Tablas)
+
+
+
+Crear el modelo Categoria en el proyecto Models con la entidades o atributos de la tabla 
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Text;
+
+namespace PortalEDU.Models
+{
+    public class Categoria
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required(ErrorMessage ="Ingrese un nombre para la categoria")]
+        [Display (Name ="Nombre Categoria")]
+        public  string Nombre { get; set; }
+
+
+        [Required]
+        [Display(Name = "Orden de Vizualizacion")]
+        public string Orden { get; set; }
+
+    }
+}
+
+
+Creamos una interfaz dentro de repositry 
+ICategoriaRepository le damos atributo PUBLICA heredamos de IRepository y le pasamos la clase Categoria
+
+Luego Listamos sus metodos
+
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using PortalEDU.Models;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace PortalEDU.ADO.Data.Repository
+{
+    public interface ICategoriaRepository : IRepository<Categoria>
+    {
+
+        IEnumerable<SelectListItem> GetListaCategoria();
+
+        void Update(Categoria categoria);
+    }
+}
+
+
+
+
+OJO: en la clase Application DBContext debemos de mapear todas las entidades, Ejemplo:
+
+
+public DbSet<Categoria> Categoria { set; get; } // Asi todas las tablas de la base de datos.
+
+
+
+Creamos una clase en carpeta Data de ADO con el nombre de CategoriaRepository para Instanciar la Interfaz
+
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using PortalEDU.ADO.Data.Repository;
+using PortalEDU.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace PortalEDU.ADO.Data
+{
+    public class CategoriaRepository : Repository<Categoria>, ICategoriaRepository
+    {
+        private readonly ApplicationDbContext _db;
+
+        public CategoriaRepository(ApplicationDbContext db):base (db)
+        {
+            _db = db;
+        }
+
+
+        public IEnumerable<SelectListItem> GetListaCategoria()
+        {
+            return _db.Categoria.Select(i => new SelectListItem()
+            {
+                Text= i.Nombre,
+                Value= i.Id.ToString()
+            });
+        }
+
+        public void Update(Categoria categoria)
+        {
+
+            var ObjDesdeDb = _db.Categoria.FirstOrDefault(s => s.Id == categoria.Id);
+            ObjDesdeDb.Nombre = categoria.Nombre;
+            ObjDesdeDb.Orden = categoria.Orden;
+            _db.SaveChanges();
+        }
+    }
+}
+
+
+
+ES EL MOMENTO DE CREAR EL CONTENEDOR DE TRABAJO aqui se crearan todos los repositorios de trabajo EJEMPLO:
+ICategoriaRepository Categoria { get; } // Y asi crear para todos los repositorios de las entidades creadas
+Asi que esta ira creciendo a medida que crece nuestro proyecto 
+
+En IRepository Crear la interfaz IContenedorTrabajo
+
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace PortalEDU.ADO.Data.Repository
+{
+    interface IContenedorTrabajo : IDisposable
+    {
+        ICategoriaRepository Categoria { get; }
+
+        void Save();
+    }
+}
+
+
+
+
+
+LUEGO EN DATA CREAMOS UNA CLASE DEL TIPO ContenedorTrabnajo
+
+Aqui se van a crear el acceso a la interfaz y debe de ir creciendo junto a las nuevas entidades, aqui solo se creo categoria:
+
+using PortalEDU.ADO.Data.Repository;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+
+namespace PortalEDU.ADO.Data
+{
+    public class ContenedorTrabajo : IContenedorTrabajo
+    {
+
+        private readonly ApplicationDbContext _db;
+
+        public ContenedorTrabajo(ApplicationDbContext db)
+        {
+            _db = db;
+            Categoria = new CategoriaRepository(_db);
+        }
+
+
+
+        public ICategoriaRepository Categoria { get; private set; }
+
+        public void Dispose()
+        {
+            _db.Dispose();
+        
+        }
+
+        public void Save()
+        {
+
+            _db.SaveChanges();
+        }
+    }
+}
+
+
+----------AQUI TERMINA MODELADO DE LA ESTRUCTURA IREPOSITORYPATERN, SOLO SE DEBE DE IR MODIFICANDO A MEDIDA QUE 
+VAMOS CREANDO NUEVAS ENTIDADES--------
+
+PERMANECEN 
+IRepository
+Repository 
+Y en las unidades de trabajo IContenedorTrabajo y ContenedorTrabajo Añadir las nuevas entidades
+
+
+Las nuevos elementos que se deben crear son:
+Clase NuenoElemento  --> Este va en el proyecto models y son los atributos de la BD
+INuevoElementoRepository ---> Dentro de la carpeta repository
+NuevoElementoRepository ---> Esta va dentro de Data 
+
+---------------------------------------------FINISH del Patron Repositorio-----------------------------------
+
+
+
+
+Debemos de hacer la conexion con la BD
+OJO deben de estar en el AplicationDbContext el DbSet de la nueva taba a crear 
+
+Desde la consola de paquetes: ---> verificar que esta en el proyecto Acceso a Datos ADO
+
+add migration CreacionTablaInicialCategoria ---> No se pudo asi...
+ 
+En mi caso no se pudo realizar la migracion segun el video
+se realizo con Add-Migration ----> Revisar Link https://anexsoft.com/implementando-migraciones-con-entity-framework-y-asp-net-mvc
+
+
+
+Setear Cadena de conexion 
+
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(local);Database=PortalEDU_3_1;user id=sa; pwd=Ef1c13nc1@; Trusted_Connection=false; MultipleActiveResultSets=true"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "AllowedHosts": "*"
+}
+
+Luego enviamos la migracion a la BD con el comando update-database
+
+------------------------------------------------TERMINA LA PRUEBA DE MIGRACION--------------------------------
+
+
+INICIA CRUD CATEGORIAS
+
+EN AREAS --> En el controllers de Admin crear un controlador CategoriasController
+
+////Primer controlador
+
+using Microsoft.AspNetCore.Mvc;
+using PortalEDU.ADO.Data;
+using PortalEDU.ADO.Data.Repository;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace PortalEdu3_1.Areas.Admin.Controllers
+{
+
+    [Area("Admin")]
+    public class CategoriasController : Controller
+    {
+        private readonly IContenedorTrabajo _contenedorTrabajo;
+
+        public CategoriasController(IContenedorTrabajo contenedorTrabajo)
+        {
+            _contenedorTrabajo = contenedorTrabajo;
+        }
+
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+	// En esta region se manda a llamar los metodos de acceso a datos para traer la informacion que esta en nuestyro repositorio general
+	// llamado IRepository
+
+        #region LLAMADAS A LAS API
+        [HttpGet]
+
+        public IActionResult GetAll()
+        {
+            return Json(new {data = _contenedorTrabajo.Categoria.GetAll()});
+        }
+
+        #endregion
+
+
+
+    }
+}
+
+
+
+-----------------------CREANDO LA VISTA---------------------------------------------------
+
+- Clic derecho sobre el Index del controlador Agragr vista y elegir pagina de diseño _Layout
+
+-Luego de crar la vista asegurarse de instanciar la los contenedores de trabajo en el starup
+Ejemplo:services.AddScoped<IContenedorTrabajo, ContenedorTrabajo>(); 
+
+-Para la creacion de la tabla que tendra los datos se utilizo boopstrap y tambien javascrip se creo categoria.js
+en la carpeta JS de wwwroot que tendra el script de la vista
+
+---------------------------------------Script de la tabla---------------------------------------------------
+var dataTable;
+
+$(document).ready(function () {
+    cargarDatatable();
+});
+
+
+function cargarDatatable() {
+    dataTable = $("#tblCategorias").DataTable({
+        "ajax": {
+            "url": "/admin/categorias/GetAll",
+            "type": "GET",
+            "datatype": "json"
+        },
+        "columns": [
+            { "data": "id", "width": "5%" },
+            { "data": "nombre", "width": "50%" },
+            { "data": "orden", "width": "20%" },
+            {
+                "data": "id",
+                "render": function (data) {
+                    return `<div class="text-center">
+                            <a href='/Admin/Categorias/Edit/${data}' class='btn btn-success text-white' style='cursor:pointer; width:100px;'>
+                            <i class='fas fa-edit'></i> Editar
+                            </a>
+                            &nbsp;
+                            <a onclick=Delete("/Admin/Categorias/Delete/${data}") class='btn btn-danger text-white' style='cursor:pointer; width:100px;'>
+                            <i class='fas fa-trash-alt'></i> Borrar
+                            </a>
+                            `;
+                }, "width": "30%"
+            }
+        ],
+        "language": {
+            "emptyTable": "No hay registros"
+        },
+        "width": "100%"
+    });
+}
+
+
+function Delete(url) {
+    swal({
+        title: "Esta seguro de borrar?",
+        text: "Este contenido no se puede recuperar!",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "Si, borrar!",
+        closeOnconfirm: true
+    }, function () {
+        $.ajax({
+            type: 'DELETE',
+            url: url,
+            success: function (data) {
+                if (data.success) {
+                    toastr.success(data.message);
+                    dataTable.ajax.reload();
+                }
+                else {
+                    toastr.error(data.message);
+                }
+            }
+        });
+    });
+}
+
+------------------------------------Aqui termina Script de la tabla--------------------------------------------
+
+
+AHora se crea el formulario para crear categorias
+
+- creamos el metodo get de create 
+ [HttpGet]
+        public IActionResult Create() {
+            return View();
+        }
+
+- Luegro agregamos la vista del metodo, click derecho sobre create y creamos la vista 
+
+- invocamos el modelo que vamos a utilizar @model PortalEDU.Models.Categoria
+
+- Creamos el formulario con tagHelpers y se escribe el codigo para llamar una vista parcial para volver luego
+ se crea la vista parcial en Shared
+
+ASI QUEDA CREATE:
+@model PortalEDU.Models.Categoria
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Create</h1>
+
+<br />
+<br />
+<h3 class="text-center">Crear una nueva categoria    </h3>
+<form asp-action="Create" method="post">
+    <div class="row px-2 mx-2 border">
+        <div asp-validation-summary=" ModelOnly" class="text-danger"></div>
+        <div class="col-10 offset-1 mt-4">
+            <div class="form-group row">
+                <div class="col-4">
+                    <label asp-for="Nombre"> </label>
+                </div>
+                <div class="col-8">
+                    <input asp-for="Nombre" class="form-control" />
+                    <span asp-validation-for="Nombre" class="text-danger"> </span>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-4">
+                    <label asp-for="Orden"> </label>
+                </div>
+                <div class="col-8">
+                    <input asp-for="Orden" class="form-control" />
+                    <span asp-validation-for="Orden" class="text-danger"> </span>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-8 offset-4">
+                    <partial name="_VistaCrearVolver"/>
+                </div>
+                
+
+            </div>
+
+        </div>
+    </div>
+</form>
+
+
+Y la vista Parcial:
+
+<div class="row">
+    <div class="col">
+        <button type="submit" class="btn btn-primary form-control"> Crear</button>       
+        &nbsp;
+    </div>
+    <div class="col">
+        <a asp-action="Index" class="btn btn-success form-control">Volver a la vista</a>
+    </div>
+</div>
+
+
+
+
+Ahora a crear el metodo post crear de categoria para guardar cambios, queda de la siguiente manera:
+     [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Create(Categoria categoria)
+        {
+            if (ModelState.IsValid)
+            {
+                _contenedorTrabajo.Categoria.Add(categoria);
+                _contenedorTrabajo.Save();
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(categoria);
+        }
+
+
+
+Continuadmos con el medoto Edit 
+[HttpGet]
+        public IActionResult Edit(int id)
+        {
+            Categoria categoria = new Categoria();
+            categoria = _contenedorTrabajo.Categoria.Get(id);
+            if (categoria == null)
+            {
+                return NotFound();
+
+            }
+            return View(categoria);
+        }
+
+ 
+EDIT CSHTML
+@model PortalEDU.Models.Categoria
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Edit</h1>
+
+<h1>Create</h1>
+
+<br />
+<br />
+<h3 class="text-center">Editar categoria</h3>
+<form asp-action="Create" method="post">
+    <div class="row px-2 mx-2 border">
+        <div asp-validation-summary=" ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="Id" />
+        <div class="col-10 offset-1 mt-4">
+            <div class="form-group row">
+                <div class="col-4">
+                    <label asp-for="Nombre"> </label>
+                </div>
+                <div class="col-8">
+                    <input asp-for="Nombre" class="form-control" placeholder="Categoria" />
+                    <span asp-validation-for="Nombre" class="text-danger"> </span>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-4">
+                    <label asp-for="Orden"> </label>
+                </div>
+                <div class="col-8">
+                    <input asp-for="Orden" class="form-control" />
+                    <span asp-validation-for="Orden" class="text-danger"> </span>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-8 offset-4">
+                    <div class="row">
+                        <div class="col">
+                            <button type="submit" class="btn btn-primary form-control" (////OJO AQUI PARA REGRESAR ID) asp-route-id="@Model.Id">Actualizar</button>
+                        </div>
+                        <div class="col">
+                            <a asp-action="Index" class="btn btn-success form-control">Volver a la vista</a>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+    </div>
+</form>
+
+
+
+Y EN EL CONTROLER EDIT METODO POST -- Utilizamos el mismo de create y hacemos los cambios pertinentes
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(Categoria categoria)
+        {
+            if (ModelState.IsValid)
+            {
+                _contenedorTrabajo.Categoria.Update(categoria);
+                _contenedorTrabajo.Save();
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(categoria);
+        }
+
+
+Continuamos con DELETE
+
+Dentro de region: #region LLAMADAS A LAS API
+
+  public IActionResult Delete(int id)
+        {
+
+            var ObjFromDb = _contenedorTrabajo.Categoria.Get(id);
+            if (ObjFromDb == null)
+            {
+                return Json(new { success = false, message = "Error al intentar borrar categoria" });
+
+            }
+
+            _contenedorTrabajo.Categoria.Remove(ObjFromDb);
+            _contenedorTrabajo.Save();
+            return Json(new { success = true, message = "Categoria borrada con exito" });
+        }
+
+
+-----------------------------------------------------------------------------------------------------------------
+
+
+Iniciamos CRUD de articulos 
+
+- Creamos el modelo 
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
+
+namespace PortalEDU.Models
+{
+    public class Articulo
+    {
+        [Key]
+        public int Id { get; set; }
+        [Required(ErrorMessage ="El Nombre es requerido")]
+        [Display (Name ="Nombre del articulo")]
+        public string Nombre { get; set; }
+
+        
+        [Display(Name = "Fecha de creacion")]
+        public string FechaCreacion { get; set; }
+
+        [Display(Name = "Imagen")]
+        [DataType(DataType.ImageUrl)]
+        public string UrlImagen { get; set; }
+
+//////////////Ojo aqui hay una relacion 
+
+        [Required]
+        public int CategoriaId { get; set; }
+
+        [ForeignKey("CategoriaId")]
+        public Categoria Categoria{ get; set; }
+
+
+
+    }
+}
+
+
+Luego agregamos la nueva entidad en el DbContext:
+   public DbSet<Articulo> Articulo { set; get; }
+
+Realizar migracion y ya esta listo el nuevo modelo. para ADO
+----------------------------------------------------------------------------------------------------------
+
+Ahoro sigue agregar articulo a Repositorio y a la Unidad de trabajo 
+
+Dentro de data Repository duplicamos ICategioriaRepository y cambiamos el nombre a IArticuloRepository
+Hacer lo mismo con CategiraRepositori que esta fuera de IRepository y cambiar nombre a ArticuloRepository
+ 
+IArticuloRepository
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using PortalEDU.Models;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace PortalEDU.ADO.Data.Repository
+{
+    public interface IArticuloRepository : IRepository<Articulo>
+    {
+               
+
+                void Update(Articulo articulo);
+    }
+}
+
+
+
+ArticuloRepository
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using PortalEDU.ADO.Data.Repository;
+using PortalEDU.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace PortalEDU.ADO.Data
+{
+    public class ArticuloRepository : Repository<Articulo>, IArticuloRepository
+    {
+        private readonly ApplicationDbContext _db;
+
+        public ArticuloRepository(ApplicationDbContext db):base (db)
+        {
+            _db = db;
+        }
+
+        public void Update(Articulo articulo)
+        {
+
+            var ObjDesdeDb = _db.Articulo.FirstOrDefault(s => s.Id == articulo.Id);
+            ObjDesdeDb.Nombre = articulo.Nombre;
+            ObjDesdeDb.Descripcion = articulo.Descripcion;
+            ObjDesdeDb.FechaCreacion = articulo.FechaCreacion;
+            ObjDesdeDb.UrlImagen = articulo.UrlImagen;
+            ObjDesdeDb.CategoriaId = articulo.CategoriaId;
+           // _db.SaveChanges();
+        }
+    }
+}
+
+
+
+///// En IcontenedorTrabajo, solamente agregar:IArticuloRepository Articulo { get; }
+
+//// En contenedor de trabajo agregar las siguientes lineas: 
+
+Articulo = new ArticuloRepository(_db);
+public IArticuloRepository Articulo { get; private set; }
+
+
+-----------------------------------------------------------------------------------------------------------------
+
+Crear controlador Articulo, ViewModel, metodo y vista 
+
+
+
+//// En la region de este controlador se debe de llamar la categoria porque estaran relacionados:
+   #region LLAMADAS A LAS API
+        [HttpGet]
+
+        public IActionResult GetAll()
+        {
+            return Json(new { data = _contenedorTrabajo.Articulo.GetAll(includeProperties: "Categoria") });
+        
+        }
+
+        #endregion
+ 
+
+MUCHO OJO CON ESTO: PARA PODER MOSTRAR LAS RELACIONES ENTRE LAS PROPIEDADES ES NECESARIO CREAR UNA NUEVA CLASE
+QUE SE LLAMA VIEWMODEL (((ESTO ES CLAVE)))
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace PortalEDU.Models.ViewModel
+{
+    public class ArticuloVM
+    {
+
+        public Articulo Articulo { get; set; }
+
+        public IEnumerable<SelectListItem> ListaCategorias { get; set; }
+
+    }
+}
+
+
+
+En el controlador Instanciamos las propiedades del VM
+     public IActionResult Index()
+        {
+           
+            ArticuloVM artivm = new ArticuloVM()
+            {
+                articulo = new PortalEDU.Models.Articulo(),
+                ListaCategorias = _contenedorTrabajo.Categoria.GetListaCategoria()
+             // Articulo = new Models.
+      
+            };
+
+            return View(artivm);
+        }
+
+Luego en el Index cshtml y el javascript para llenado de la tabla solo hacemos los cambios pertienentes 
+
+-----------------------------------------------------------------------------------------------------------
+
+Hora de crear el Create(Get) de Articulos ojo porque se debe de trabajar en ArticuloVM
+
+Se copia el create de la vista anterior(Categoria) y se hacen los cambios pertinentes 
+Ojo con esto: dentro del form donde se defime el metodo POST o GET escribir esto: enctype="multipart/form-data"
+Eso sirve para poder subir archivos
+
+para mostrar la relacion de 1 a muchos se debe de hacer lo siguiente:
+
+@*// Aqui se despliega la lista de categoria, la relacion de 1 a muchos*@
+            <div class="form-group row">
+                <div class="col-4">
+                    <label asp-for="articulo.CategoriaId"> </label>
+                </div>
+                <div class="col-8">
+                    @Html.DropDownListFor(m => m.articulo.CategoriaId, Model.ListaCategorias, "-Porfavor seleccione una categoria-", new
+                    { @class = "form-control" })
+
+                </div>
+            </div>
+
+
+SE UTILIZO UN PLUGIN PARA PODER CREAR UN TEXTAREA DONDE SE PUEDA FORMATEAR EL TEXTO
+
+
+PD:VER LAS PPROPIEDADES EN PLUGINS Y TOOLBARMAS ADECUADAS, AQUI VAN TODAS.
+
+@section Scripts{
+    <script src="https://cdn.tiny.cloud/1/i2fj0cj70ajhbmkrqqx8su1fo2at2l2ssky2cwkigjkpr7ue/tinymce/5/tinymce.min.js"></script>
+    <script>
+        tinymce.init({
+            selector: 'textarea',
+            plugins: 'a11ychecker advcode casechange formatpainter linkchecker autolink lists checklist media mediaembed pageembed permanentpen powerpaste table advtable tinycomments tinymcespellchecker',
+            toolbar: 'a11ycheck addcomment showcomments casechange checklist code formatpainter pageembed permanentpen table',
+            toolbar_mode: 'floating',
+            tinycomments_mode: 'embedded',
+            tinycomments_author: 'Portal Educativo',
+        });
+    </script>
+} 
+
+
+
+  
+
+
+
+
+
+
