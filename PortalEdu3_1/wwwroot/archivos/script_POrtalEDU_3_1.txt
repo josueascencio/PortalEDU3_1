@@ -1010,7 +1010,7 @@ para mostrar la relacion de 1 a muchos se debe de hacer lo siguiente:
 SE UTILIZO UN PLUGIN PARA PODER CREAR UN TEXTAREA DONDE SE PUEDA FORMATEAR EL TEXTO
 
 
-PD:VER LAS PPROPIEDADES MAS ADECUADAS, AQUI VAN TODAS.
+PD:VER LAS PPROPIEDADES EN PLUGINS Y TOOLBARMAS ADECUADAS, AQUI VAN TODAS.
 
 @section Scripts{
     <script src="https://cdn.tiny.cloud/1/i2fj0cj70ajhbmkrqqx8su1fo2at2l2ssky2cwkigjkpr7ue/tinymce/5/tinymce.min.js"></script>

@@ -18,18 +18,35 @@ namespace PortalEdu3_1.Areas.Admin.Controllers
                 
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
+           
+            //ArticuloVM artivm = new ArticuloVM()
+            //{
+            //    articulo = new PortalEDU.Models.Articulo(),
+            //    ListaCategorias = _contenedorTrabajo.Categoria.GetListaCategoria()
+            // // Articulo = new Models.
+      
+            //};
 
-            
+            return View();
+        }
+
+        [HttpGet]
+
+        public IActionResult Create()
+        {
             ArticuloVM artivm = new ArticuloVM()
             {
-                ListaCategorias = _contenedorTrabajo.Categoria.GetListaCategoria(),
-                Articulo = new Models.
-                
+                articulo = new PortalEDU.Models.Articulo(),
+                ListaCategorias = _contenedorTrabajo.Categoria.GetListaCategoria()
+                // Articulo = new Models.
+
             };
 
             return View(artivm);
+
         }
 
 

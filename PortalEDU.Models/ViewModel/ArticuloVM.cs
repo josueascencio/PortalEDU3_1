@@ -8,7 +8,7 @@ namespace PortalEDU.Models.ViewModel
     public class ArticuloVM
     {
 
-        public Articulo Articulo { get; set; }
+        public Articulo articulo { get; set; }
 
         public IEnumerable<SelectListItem> ListaCategorias { get; set; }
 

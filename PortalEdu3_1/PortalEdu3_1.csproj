@@ -27,6 +27,7 @@
     <Folder Include="Areas\Alumno\Controllers\" />
     <Folder Include="Areas\Docente\Controllers\" />
     <Folder Include="Areas\Padre\Controllers\" />
+    <Folder Include="wwwroot\archivos\" />
   </ItemGroup>
 
   <ItemGroup>
