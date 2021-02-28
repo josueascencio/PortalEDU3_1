@@ -1027,6 +1027,190 @@ PD:VER LAS PPROPIEDADES EN PLUGINS Y TOOLBARMAS ADECUADAS, AQUI VAN TODAS.
 } 
 
 
+-------------------------------------------------------------------------------------------------------------------------------
+Inciia video 53 insertar articulos y subida de archivos 
+
+Ojo para el emtodo post create se debe de instaciar una propiedad que nos permita trabajar con subida de archvos, esta:
+
+private readonly IWebHostEnvironment _hostinEnvironment;
+
+Luego se pasa como parmetro en el constructor de ArticulosControler Sin el guin bajo:
+
+IMPORTANTE ANALIZAR ESTE METODO QUE RECIBE UNA IMAGEN, SIEMPRE EN EL METODO CREATE 
+
+
+     [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Create(ArticuloVM artiVM)
+        {
+            if (ModelState.IsValid)
+            {
+                string rutaPrincipal = _hostinEnvironment.WebRootPath;
+                var archivos = HttpContext.Request.Form.Files;
+
+                if (artiVM.articulo.Id == 0)
+                {
+                    string nombreArchivo = Guid.NewGuid().ToString();
+                    var subidas = Path.Combine(rutaPrincipal, @"imagenes\articulos");
+                    var extension = Path.GetExtension(archivos[0].FileName);
+
+                    using (var fileStreams = new FileStream(Path.Combine(subidas, nombreArchivo + extension), FileMode.Create))
+                    {
+                        archivos[0].CopyTo(fileStreams);
+                    }
+
+                    artiVM.articulo.UrlImagen = @"\imagenes\artiulos" + nombreArchivo + extension;
+                    artiVM.articulo.FechaCreacion = DateTime.Now.ToString();
+
+                    _contenedorTrabajo.Articulo.Add(artiVM.articulo);
+                    _contenedorTrabajo.Save();
+
+
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            artiVM.ListaCategorias = _contenedorTrabajo.Categoria.GetListaCategoria();
+            return View(artiVM);
+        }
+        
+
+
+///Agegar estas lienas a metodo post para agregar una excepcion si no se coloca nada en los campos del articulo:
+
+artiVM.ListaCategorias = _contenedorTrabajo.Categoria.GetListaCategoria();
+            return View(artiVM);
+        }
+
+
+
+// Creamos el EDIT de articulos 
+
+ [HttpGet]
+
+        public IActionResult Edit(int? id)
+        {
+            ArticuloVM artivm = new ArticuloVM()
+            {
+                articulo = new PortalEDU.Models.Articulo(),
+                ListaCategorias = _contenedorTrabajo.Categoria.GetListaCategoria()
+                // Articulo = new Models.
+
+            };
+
+            if (id != null)
+            {
+                artivm.articulo = _contenedorTrabajo.Articulo.Get(id.GetValueOrDefault());
+            }
+            return View(artivm);
+        }
+
+
+A CONTINUACION LA VISTA:
+Se reutiliza todo del create, solo cambiar esta linea: 
+<button type="submit" class="btn btn-primary form-control" asp-route-id="@Model.articulo.Id}">Actualizar</button>
+
+ <input type="hidden" asp-for="articulo.Id" />
+
+Y tambien poner la imagen anterior:
+ <div class="col-4 pt-3">
+            <img src="@Model.articulo.UrlImagen" width="100%" style="border-radius:5px; border:1px solid #bbb9b9;" />
+        </div>
+
+
+
+        -------------------------------------------------------------------------------------------------------------------
+    Ojo con el metodo EDIT POST, se encuentra la parte por si cambian imagen y una parte por si se conserva la imagen.
+
+
+      public IActionResult Edit(ArticuloVM artiVM)
+        {
+            if (ModelState.IsValid)
+            {
+                string rutaPrincipal = _hostinEnvironment.WebRootPath;
+                var archivos = HttpContext.Request.Form.Files;
+
+                var articuloDesdeDb = _contenedorTrabajo.Articulo.Get(artiVM.articulo.Id);
+
+                if (archivos.Count() > 0 )
+                {
+                    // Editamos Imagenes
+                    string nombreArchivo = Guid.NewGuid().ToString();
+                    var subidas = Path.Combine(rutaPrincipal, @"imagenes\articulos");
+                    var extension = Path.GetExtension(archivos[0].FileName);
+                    var nuevaExtension = Path.GetExtension(archivos[0].FileName);
+
+                    var rutaImagen = Path.Combine(rutaPrincipal, articuloDesdeDb.UrlImagen.TrimStart('\\'));
+
+
+                    if (System.IO.File.Exists(rutaImagen))
+                    {
+                        System.IO.File.Delete(rutaImagen);
+                    }
+
+                    // Subimos nuevamente el archivo
+                    using (var fileStreams = new FileStream(Path.Combine(subidas, nombreArchivo + nuevaExtension), FileMode.Create))
+                    {
+                        archivos[0].CopyTo(fileStreams);
+                    }
+
+                    artiVM.articulo.UrlImagen = @"\imagenes\articulos\" + nombreArchivo + nuevaExtension;
+                    artiVM.articulo.FechaCreacion = DateTime.Now.ToString();
+
+                    _contenedorTrabajo.Articulo.Update(artiVM.articulo);
+                    _contenedorTrabajo.Save();
+
+
+                    return RedirectToAction(nameof(Index));
+                }
+
+                else
+                {
+                    // Aqui es cuando la imagen ya existe y no se reeemplaza 
+                    // debe conservar la que ya esta en la base de datos
+                    artiVM.articulo.UrlImagen = articuloDesdeDb.UrlImagen;
+                }
+
+                _contenedorTrabajo.Articulo.Update(artiVM.articulo);
+                _contenedorTrabajo.Save();
+                return RedirectToAction(nameof(Index));
+
+            }
+
+            return View();
+        }
+--------------------------------------------------------------------------------------------------------------------------
+
+
+Ahora el metodo Borrar
+
+ public IActionResult Delete(int id)
+        {
+            var articuloDesdeDb = _contenedorTrabajo.Articulo.Get(id);
+            string rutaDirectorioPrincipal = _hostinEnvironment.WebRootPath;
+            var rutaImagen = Path.Combine(rutaDirectorioPrincipal, articuloDesdeDb.UrlImagen.TrimStart('\\'));
+
+            if (System.IO.File.Exists(rutaImagen))
+            {
+                System.IO.File.Delete(rutaImagen);
+            }
+
+            if (articuloDesdeDb == null)
+            
+                {
+                    return Json(new { success = false, message = "Error al intentar borrar articulo" });
+
+                }
+
+                _contenedorTrabajo.Articulo.Remove(articuloDesdeDb);
+                _contenedorTrabajo.Save();
+                return Json(new { success = true, message = "Articulo borrado con exito" });         
+        }
+
+        
+
+
+
 
   
 
