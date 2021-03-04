@@ -17,5 +17,8 @@ namespace PortalEDU.ADO.Data
         public DbSet<Categoria> Categoria { set; get; }
 
         public DbSet<Articulo> Articulo { set; get; }
+
+        public DbSet<Slider> Slider { set; get; }
+
     }
 }

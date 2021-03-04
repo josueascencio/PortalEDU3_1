@@ -1208,7 +1208,22 @@ Ahora el metodo Borrar
         }
 
         
+-----------------------------------------------------------------------------------------------------------------------
 
+Creacion de estructura para slider
+
+- Crear la propiedad 
+- Agregar a Application DBCOntext 
+- Realizar migracion 
+- Crear el ISliderRepository
+- Crear el SliderRepository
+- Modifica IcontenedoTrabajo
+- Modificar ContenedorTrabajo
+- Crear El Controlador
+- Crear la vista
+- Crear el API JS
+- De ahi en adelante se crea el CRUD
+- En editar OJO siempre enviar el ID como campo oculto: <input type="hidden" asp-for="articulo.Id" />
 
 
 
