@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using PortalEDU.ADO.Data.Repository;
+using PortalEDU.Models;
+using PortalEDU.Models.ViewModel;
 using PortalEdu3_1.Models;
 using System;
 using System.Collections.Generic;
@@ -12,27 +15,34 @@ namespace PortalEdu3_1.Controllers
     [Area ("Anonimo")]
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ILogger<HomeController> logger)
+        private readonly IContenedorTrabajo _contenedorTrabajo;
+
+
+        public HomeController(IContenedorTrabajo contenedorTrabajo)
         {
-            _logger = logger;
+            _contenedorTrabajo = contenedorTrabajo;
         }
 
         public IActionResult Index()
         {
-            return View();
+            HomeVM homeVM = new HomeVM()
+            {
+                slider = _contenedorTrabajo.Slider.GetAll(),
+                ListaArticulos = _contenedorTrabajo.Articulo.GetAll()
+            };
+            return View(homeVM);
+        
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
+
+        public IActionResult Details(int id) {
+
+
+            var articuloDesdeDB = _contenedorTrabajo.Articulo.GetFirstOrDefault(a => a.Id == id);
+            return View(articuloDesdeDB);
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+        
     }
 }

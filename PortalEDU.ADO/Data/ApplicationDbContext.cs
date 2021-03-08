@@ -20,5 +20,7 @@ namespace PortalEDU.ADO.Data
 
         public DbSet<Slider> Slider { set; get; }
 
+        public DbSet<ApplicationUser> ApplicationUser { set; get; }
+
     }
 }

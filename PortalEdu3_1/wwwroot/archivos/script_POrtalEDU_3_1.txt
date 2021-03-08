@@ -1226,6 +1226,291 @@ Creacion de estructura para slider
 - En editar OJO siempre enviar el ID como campo oculto: <input type="hidden" asp-for="articulo.Id" />
 
 
+-----------------------------------------------------------------------------------------------------------------------------
+Crenado la vista para el slider de usuario anonimo
+- Se va a acceder a los elementos de slider y articulos entonces se debe crear el VM respectivo:
+
+
+namespace PortalEDU.Models.ViewModel
+{
+    public class HomeVM
+    {
+        public IEnumerable<Slider> slider { get; set; }
+
+        public IEnumerable<Articulo> ListaArticulos { get; set; }
+    }
+}
+
+
+Luego se configura el controlador:
+
+
+namespace PortalEdu3_1.Controllers
+{
+    [Area ("Anonimo")]
+    public class HomeController : Controller
+    {
+
+        private readonly IContenedorTrabajo _contenedorTrabajo;
+
+
+        public HomeController(IContenedorTrabajo contenedorTrabajo)
+        {
+            _contenedorTrabajo = contenedorTrabajo;
+        }
+
+        public IActionResult Index()
+        {
+            HomeVM homeVM = new HomeVM()
+            {
+                slider = _contenedorTrabajo.Slider.GetAll(),
+                ListaArticulos = _contenedorTrabajo.Articulo.GetAll()
+            };
+            return View(homeVM);
+        
+        }
+
+     
+    }
+}
+
+y Ojo con lo que se hace en la vista: ASI SE CREAN LAS TARJETAS:
+
+Aqui inicia la creacion de los articulos*@ 
+
+@if (Model.ListaArticulos.Count() > 0)
+{
+    <hr />
+    <div class="row">
+       @foreach (var articulo in Model.ListaArticulos.OrderBy(o => o.Id))
+       {
+        <div class="col-4">
+            <div class="card">
+                <img src="@articulo.UrlImagen" class="img-thumbnail" width="100%"/>
+                <div class="card-body">
+                    <h5 class="text-center">@articulo.Nombre</h5>
+                    <p>@articulo.FechaCreacion </p>
+                    <a asp-action="Details" class="btn btn-success" style="border-radius:2px" asp-route-id="@articulo.Id">Más información</a>
+                </div>
+
+            </div>
+
+        </div>
+
+       }
+
+    </div>
+
+}
+else 
+{ 
+<p> No exsiten articulos</p>
+}
+
+
+- cre creeara la vista details
+
+Aqui se creo una card mas grande nada mas
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+Inicia la configuracion de la identidad:
+
+- primero debemos hacer un scaffold de la identidad, en el proyecto web se agrega iten con scaffold y se elige identidad
+- Se crea una nueva clase en models para agregar mas propiedades a la tabla de usuarios que trae ASP por default, esa clase debe de eredar de IdentityUser:
+using Microsoft.AspNetCore.Identity;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Text;
+
+namespace PortalEDU.Models
+{
+    public class ApplicationUser: IdentityUser
+    {
+        [Required (ErrorMessage =("El Nombre es requerido"))]
+        public string Nombre { get; set; }
+
+        public string Direccion { get; set; }
+    }
+}
+
+
+- Luego como siempre, despues de crear una nueva propiedad, es necesario crear la entidad en el DBCOntext.
+- Procedemos a ejecutar la migracion.
+- Agregamos las nuevas propiedades a la clase register 
+- modelamos la vista con las nuevas propiedades 
+- para los roles creamos una nueva clase de constantes en el proyecto de utilideades, aqui dememos de crear propiedades constantes con los nombres de todos los roles que utilizaremos
+- En la vista de registro importamos la clase utilidades parta poder hacer uso de las propiedades
+- Se crea un nuevo div donde accedemos a los roles creados en constantes
+- En el register debemos invocar el RoloManager juesto en el metodo registerModel:  private readonly RoleManager<IdentityRole> _roleManager;
+- Se debe de instancia en el constructor tambien: RoleManager<IdentityRole> roleManager
+- Luego lo asignamos en el mismo constructor=  _roleManager = roleManager;
+
+- En el moetod OnPostAsync, realizamos los siguientes cambios:
+
+var user = new ApplicationUser { 
+                    UserName = Input.Email, 
+                    Email = Input.Email,
+                    Nombre = Input.Nombre,
+                    Ciudad = Input.Ciudad,
+                    Direccion = Input.Direccion,
+                    Pais = Input.Pais,
+                    PhoneNumber = Input.PhoneNumber,
+                    EmailConfirmed = true};
+
+
+- En el mismo metodo en el IF result.Succeded, escribimos las siguientes cambios, todo depende de cuantos roles necesitamos:
+
+ // Aqui validamos si los roles existen, sino se crean
+                    if (!await _roleManager.RoleExistsAsync(Constantes.Admin))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole(Constantes.Admin));
+                        await _roleManager.CreateAsync(new IdentityRole(Constantes.Alumno));
+                        await _roleManager.CreateAsync(new IdentityRole(Constantes.Anonimo));
+                        await _roleManager.CreateAsync(new IdentityRole(Constantes.Docente));
+                        await _roleManager.CreateAsync(new IdentityRole(Constantes.Padre));
+                    }
+
+                    //Obterne el rol del usuario
+                    string rol = Request.Form["radUsuarioRole"].ToString();
+
+                    //Validamos el rol seleccionado
+                    if (rol ==Constantes.Admin)
+                    {
+                        await _userManager.AddToRoleAsync(user, Constantes.Admin);
+                    }
+                    else if (rol == Constantes.Alumno)
+                    {
+                        await _userManager.AddToRoleAsync(user, Constantes.Alumno);
+
+                    }
+                    else if (rol == Constantes.Anonimo)
+                    {
+                        await _userManager.AddToRoleAsync(user, Constantes.Anonimo);
+
+                    }
+                    else if (rol == Constantes.Docente)
+                    {
+                        await _userManager.AddToRoleAsync(user, Constantes.Docente);
+
+                    }
+                    else
+                    {
+                        if(rol == Constantes.Padre)
+                    {
+                            await _userManager.AddToRoleAsync(user, Constantes.Padre);
+
+                        }
+                    }
+
+- Pasra est ejercicio comentamos el envio y confirmacion de email
+- Ahora en el archivo starup modificamos lo siguiente:
+services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+------------------------------------------------------------------------------------------------------------------------
+- Corregir el error del emailSender:
+    - En utilidades creamos una nueva clase EmailSender y heredamos de IEmailSender y implementamos esa interfaz
+    - En consigureservice agregamos un nuevo servicio: services.AddSingleton<IEmailSender, EmailSender>();
+    ------------------------------------------------------------------------------------------------------------------
+
+Crear los usuarios:
+
+- Agregarlo a los repositorios
+En el Irepository unicamente esto:
+public interface IUsuarioRepository : IRepository<ApplicationUser>
+    {
+
+        void BloquearUsuario(string IdUsuario);
+        void DesbloquearUsuario(string IdUsuario);
+
+    }
+}
+
+-En el UsuarioRepository:
+
+Implemetamos interfaz y accedemos a los metodos:
+
+    public class UsuarioRepository : Repository<ApplicationUser>, IUsuarioRepository
+    {
+        private readonly ApplicationDbContext _db;
+
+        public UsuarioRepository(ApplicationDbContext db) : base(db)
+        {
+            _db = db;
+        }
+
+
+        public void BloquearUsuario(string IdUsuario)
+        {
+            var usuarioDesdeDB = _db.ApplicationUser.FirstOrDefault(u => u.Id == IdUsuario);
+            usuarioDesdeDB.LockoutEnd = DateTime.Now.AddYears(100);
+            _db.SaveChanges();
+        }
+
+        public void DesbloquearUsuario(string IdUsuario)
+        {
+            var usuarioDesdeDB = _db.ApplicationUser.FirstOrDefault(u => u.Id == IdUsuario);
+            usuarioDesdeDB.LockoutEnd = DateTime.Now;
+            _db.SaveChanges();
+
+        }
+    }
+}
+
+
+- Lo agregamos en el IContenedorTrabajo: IUsuarioRepository Usuario { get; }
+
+- Lo agregamos en el ContenedorTrabajo
+
+---------------------------------------------------------------------------------------------------------------
+
+Creamos el controlador:
+namespace PortalEdu3_1.Areas.Admin.Controllers
+
+{
+    [Area("Admin")]
+    public class UsuariosController : Controller
+    {
+        private readonly IContenedorTrabajo _contenedorTrabajo;
+
+        public UsuariosController(IContenedorTrabajo contenedorTrabajo)
+        {
+            _contenedorTrabajo = contenedorTrabajo;
+        }
+        public IActionResult Index()
+        {
+            var claimsIdentity = (ClaimsIdentity)this.User.Identity;
+            var usuarioActual = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+            return View(_contenedorTrabajo.Usuario.GetAll(u => u.Id !=usuarioActual.Value));
+        }
+    }
+}
+
+
+
+Seguimos con la vista:
+
+- Ver vista de usuarios para mayor referencia.
+
+Metodos para bloquear y desbloquear usuario: esto invoca lo qcreado en el contenerdor, cuando se bloque escribe en lockoutend 100 años
+  public IActionResult Bloquear(string id)
+        {
+
+            if (id == null)
+            {
+                return NotFound();
+
+            }
+            _contenedorTrabajo.Usuario.BloquearUsuario(id);
+            return RedirectToAction(nameof(Index));
+        }
+
+
+- Cambiamos algunas cosas de la vista login
+- IMPORTANTE cambiar en Manage Login todas las partes donde aparece IdentityUser por ApplicationUser
+
+
+
 
   
 

@@ -12,6 +12,8 @@ namespace PortalEDU.ADO.Data.Repository
 
         ISliderRepository Slider { get; }
 
+        IUsuarioRepository Usuario { get; }
+
         void Save();
     }
 }
