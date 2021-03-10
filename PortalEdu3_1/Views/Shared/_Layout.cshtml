@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using PortalEDU.Utilidades 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -30,6 +31,10 @@
 
                 <div class="collapse navbar-collapse" id="navbarColor01">
                     <ul class="navbar-nav mr-auto">
+                       @if (User.IsInRole(Constantes.Admin))
+                       {
+
+                      
                         <li class="nav-item dropdown">
                             <a href="#" class="nav-link dropdown-toggle text-white" id="NavbarDropDown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 
@@ -54,6 +59,7 @@
                             </a>
 
                         </li>
+                       }
                     </ul>
 
                 </div>

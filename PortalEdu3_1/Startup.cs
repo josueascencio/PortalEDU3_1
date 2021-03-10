@@ -16,6 +16,8 @@ using System.Threading.Tasks;
 using PortalEDU.ADO.Data.Repository;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using PortalEDU.Utilidades;
+using PortalEDU.Models;
+using PortalEDU.ADO.Data.Inicializador;
 
 namespace PortalEdu3_1
 {
@@ -34,10 +36,12 @@ namespace PortalEdu3_1
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+            services.AddIdentity<ApplicationUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+               .AddRoleManager<RoleManager<IdentityRole>>()
                 .AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
             services.AddRazorPages();
+            services.AddScoped<IInicializadorDB, InicializadorDB>();
             services.AddScoped<IContenedorTrabajo, ContenedorTrabajo>();
             services.AddSingleton<IEmailSender, EmailSender>();
 
@@ -46,7 +50,7 @@ namespace PortalEdu3_1
 
         
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IInicializadorDB dbInicial)
         {
             if (env.IsDevelopment())
             {
@@ -66,7 +70,7 @@ namespace PortalEdu3_1
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            dbInicial.Inicializar();
             app.UseAuthentication();
             app.UseAuthorization();
 

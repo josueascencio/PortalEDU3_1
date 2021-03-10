@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PortalEDU.ADO.Data;
 using PortalEDU.ADO.Data.Repository;
 using PortalEDU.Models;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace PortalEdu3_1.Areas.Admin.Controllers
 {
-
+    [Authorize]
     [Area("Admin")]
     public class CategoriasController : Controller
     {

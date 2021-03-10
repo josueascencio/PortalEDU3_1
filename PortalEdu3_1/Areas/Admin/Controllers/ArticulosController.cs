@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using PortalEDU.ADO.Data.Repository;
 using PortalEDU.Models;
@@ -9,7 +10,7 @@ using System.Linq;
 
 namespace PortalEdu3_1.Areas.Admin.Controllers
 {
-
+    [Authorize]
     [Area ("Admin")]
     public class ArticulosController : Controller
     {

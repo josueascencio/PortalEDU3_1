@@ -13,7 +13,7 @@ function cargarDatatable() {
             "datatype": "json"
         },
         "columns": [
-            { "data": "id", "width": "5%" },
+            { "data": "id", "width": "5%", "visible": false, },
             { "data": "nombre", "width": "50%" },
             { "data": "orden", "width": "10%" },
             {

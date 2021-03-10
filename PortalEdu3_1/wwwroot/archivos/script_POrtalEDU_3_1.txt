@@ -1507,7 +1507,52 @@ Metodos para bloquear y desbloquear usuario: esto invoca lo qcreado en el conten
 
 
 - Cambiamos algunas cosas de la vista login
-- IMPORTANTE cambiar en Manage Login todas las partes donde aparece IdentityUser por ApplicationUser
+- IMPORTANTE cambiar en Manage Login todas las partes donde aparece IdentityUser por ApplicationUser (Yuca)
+
+Luego en el starup service, agregamos esta linea: services.AddIdentity<ApplicationUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+               .AddRoleManager<RoleManager<IdentityRole>>()
+
+
+- Ojo en ManageNav permanece IdentityUser
+- Ojo en la vista LoginPartial se debe de cambiar a ApplicationUser
+- En el manage, index.cs debemos de colocar las propiedades que se mostraran para el cambio de perfil 
+- En la misma clase index del manage en el metodo LoadAsync agregamos las propiedades que se deben mantaner para que el usuario pueda ver los datos actuales
+- Ojo ver el modelado de la clase Index.CS
+- Ojo para que se guarden los campos es necesario colocar el siguiente codigo en el metodo OnPostAsync:  user.Nombre = Input.Nombre;
+            await _userManager.UpdateAsync(user); <------ Aqui se deben de colocar todos los campos que queramos que se puedan cambiar del perfil
+- Buscar Status Massge esta bonito.
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+AHORA VANOS A PROTEGER LOS ACCESOS 
+
+- Primero protegemos el menu del Layout. Importamos el Using de utilidades para poder acceder a los roles(Constantes)
+- Luego colocalos la siguiente linea donde queramos proteger, dependiendo el usuario: 
+ @if (User.IsInRole(Constantes.Admin))
+ {
+ --------> Aqui encerramos lo que queremos proteger.
+ }
+
+ - Ojo, aqui todavia se puede ingresar por el navegador a los controladores, por lo que al inicio de la clase debemos de colocar [Autorize] EASYYYY...
+
+ - Con el mismo if protegemos el html de cualquier vista 
+
+ - "Pequeño tip, para ocultar la columnas de jquery ponemos lo siguiente: "visible": false, "
+ ----------------------------------------------------------------------------------------------------
+
+
+ Iniciamos con siembra de datos, esto sirve para tener unos parametros iniciales cuando se hace un deploy, por lo menos tener el usuario admin
+
+ - Utilizamos la carpeta inicializadora
+ - Creamos una clase "puplica" normar InicializadorDB
+ - Creamos Una interfaz publica IinicializadorDB
+ - Dentro de la interfaz creamos : 
+    void Inicializar();
+ - Revisar la clase e interfaz 
+ - Para que se inicie con el programa debemos de modificar el startUP agregando un nuevo servicio:services.AddScoped<IInicializadorDB, InicializadorDB>();
+ - En el metodo COnfigure le debemos pasar un nuevo argumento de la interfaz IInicializadorDB y luego llamarla con la variable creada en el argumento, queda asi:
+ 
+  public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IInicializadorDB dbInicial)
+   dbInicial.Inicializar();
 
 
 
